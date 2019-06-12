@@ -9,8 +9,7 @@ contract SongRegistry {
         string url;
         uint256 price;
     }
-    Song[] songs;
-    uint256 public numberOfSongs = 0;
+    Song[] public songs;
     mapping (uint256 => address[]) buyers;
     
     constructor() public{
@@ -22,10 +21,10 @@ contract SongRegistry {
         _;
     }
     
-    function registerSong(string memory _name, string memory _url, uint256 _price) public {
-        songs[numberOfSongs] = Song ({name: _name, owner: msg.sender, url: _url, price: _price});
-        buyers[numberOfSongs].push(msg.sender);
-        numberOfSongs = numberOfSongs + 1;
+    function registerSong(string calldata _name, string calldata _url, uint256 _price) external {
+        Song memory newSong = Song ({name: _name, owner: msg.sender, url: _url, price: _price});
+        songs.push(newSong);
+        buyers[songs.length - 1].push(msg.sender);
     }
     
     function isBuyer(uint256 _songId) public view returns(bool){
@@ -40,8 +39,12 @@ contract SongRegistry {
     
     function buySong(uint256 _songId) public payable returns (bool){
         Song memory selectedSong = songs[_songId];
-        require(selectedSong.price == msg.value);
+        require(selectedSong.price == msg.value, "Incorect value sent with song");
         buyers[_songId].push(msg.sender);
         selectedSong.owner.transfer(msg.value);
+    }
+    
+    function numberOfSongs() public view returns(uint256) {
+        return songs.length;
     }
 }
